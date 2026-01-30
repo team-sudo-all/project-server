@@ -243,28 +243,73 @@ def search_medicine_info(user_data, keyword):
     allergies = user_data.get('allergies', 'None')
     
     prompt = f"""
-    You are a helpful 'Korean Pharmacist AI' assisting a foreigner.
-    The user is searching for: "{keyword}".
+    You are a Korean pharmacist AI.
 
-    [User Profile] Allergies: {allergies}
+    User keyword: "{keyword}"
+    User allergies: {allergies}
 
-    [Logic Guidelines for Demo]
-    1. Smart Search: 
-       - If input is a Drug Name (e.g., Tylenol), explain that drug.
-       - If input is a Symptom (e.g., Headache), recommend the most popular Korean OTC drug.
-    2. Classification: Clearly state if it is OTC (Pharmacy) or RX (Doctor).
-    3. Safety: Check against user's allergies ({allergies}). If risky, output WARNING.
+    Follow the template EXACTLY.
+    Do NOT change headers.
+    Do NOT add extra sections.
+    Fill in the blanks only.
 
-    Produce TWO sections exactly:
+    If keyword is a symptom → choose the most common Korean OTC medicine.
+
+    ------------------------
 
     === MEDICINE INFO KR ===
-    (full Korean version)
+
+    === 약품 정보 ===
+
+    1. 약품명 (한글/영문):
+    - 
+
+    2. 분류:
+    - 일반의약품(OTC) 또는 전문의약품(RX)
+
+    3. 주요 용도:
+    - 
+
+    4. 안전성 확인 (알러지: {allergies}):
+    - 안전 / 주의 / 위험
+    - 이유 한 줄
+
+    5. 예상 가격 (한국):
+    - 범위 제시
+
+    6. 복용 팁:
+    - 2~3줄
+
+    * 주의: AI 예측입니다. 약사와 상담하세요.
+
+    ------------------------
 
     === MEDICINE INFO EN ===
-    (full English version)
 
-    Follow the same medicine info format in both.
+    === Medicine Information ===
+
+    1. Name (KR/EN):
+    - 
+
+    2. Classification:
+    - OTC or RX
+
+    3. Primary Use:
+    - 
+
+    4. Safety Check (Allergy: {allergies}):
+    - SAFE / CAUTION / RISK
+    - one-line reason
+
+    5. Est. Price (Korea):
+    - range
+
+    6. Usage Tip:
+    - 2–3 lines
+
+    * Disclaimer: AI estimate. Consult a pharmacist.
     """
+
 
     try:
         response = client.chat.completions.create(
