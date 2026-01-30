@@ -1,13 +1,13 @@
+import requests
 import os
-from dotenv import load_dotenv
 from openai import OpenAI
+from dotenv import load_dotenv
 
-load_dotenv()  # 이 줄이 핵심
-
+# .env 파일에서 키를 불러옵니다 (보안 필수)
+load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-
-# 1. 의료 차트 생성 AI
+# 1. 의료 차트 생성 AI (프롬프트 100% 유지)
 def generate_medical_chart(user_data, symptom_data):
     name = user_data.get('name', '환자')
     age = user_data.get('birth_date', '미상')
@@ -55,7 +55,7 @@ def generate_medical_chart(user_data, symptom_data):
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini", 
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a factual medical scribe. Do not diagnose."},
                 {"role": "user", "content": prompt}
@@ -65,7 +65,7 @@ def generate_medical_chart(user_data, symptom_data):
     except Exception as e:
         return f"AI 차트 생성 실패: {str(e)}"
 
-# 2. 진료비 안내 AI
+# 2. 진료비 안내 AI (프롬프트 100% 유지)
 def generate_cost_guide(user_data):
     insurance = user_data.get('insurance_info', 'None')
     name = user_data.get('name', 'Unknown')
@@ -108,7 +108,7 @@ def generate_cost_guide(user_data):
     except Exception as e:
         return f"Error: {str(e)}"
 
-# ▼▼▼ [새로 추가된 함수: 진료과 추천] ▼▼▼
+# 3. 진료과 추천 AI (프롬프트 100% 유지)
 def recommend_department_ai(symptom_text):
     prompt = f"""
     You are a medical triage AI.
@@ -130,30 +130,94 @@ def recommend_department_ai(symptom_text):
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}]
+            model="gpt-4o-mini", messages=[{"role": "user", "content": prompt}]
         )
         content = response.choices[0].message.content
         
-        # 간단한 파싱
-        lines = content.strip().split('\n')
-        dept = "가정의학과"
+        dept = "내과"
         urgency = "Low"
-        reason = "일반적인 진료 권장"
-
+        reason = "일반 진료"
+        
+        lines = content.strip().split('\n')
         for line in lines:
-            if "Department:" in line:
-                dept = line.split(":", 1)[1].strip()
-            elif "Urgency:" in line:
-                urgency = line.split(":", 1)[1].strip()
-            elif "Reason:" in line:
-                reason = line.split(":", 1)[1].strip()
-                
+            if "Department:" in line: dept = line.split(":", 1)[1].strip()
+            elif "Urgency:" in line: urgency = line.split(":", 1)[1].strip()
+            elif "Reason:" in line: reason = line.split(":", 1)[1].strip()
+            
         return dept, urgency, reason
+    except:
+        return "내과", "Low", "AI 분석 실패"
 
-    except Exception as e:
-        return "내과", "Low", f"AI 분석 실패: {str(e)}"
+def search_hospitals_real(latitude, longitude, query, radius=2000):
+    print("\n" + "="*50)
+    print("🚀 [DEBUG] 카카오 병원 검색 시작")
     
+    # 1. API 키 확인
+    KAKAO_API_KEY = os.getenv("KAKAO_API_KEY")
+    
+    # 키가 없는 경우 체크
+    if not KAKAO_API_KEY:
+        print("❌ [DEBUG] KAKAO_API_KEY가 환경변수에 없습니다!")
+        # (테스트를 위해 필요하다면 여기에 직접 키를 잠시 넣어보세요)
+        # KAKAO_API_KEY = "여기에_키를_직접_넣어보세요"
+    else:
+        print(f"✅ [DEBUG] API Key 로드 성공 (길이: {len(KAKAO_API_KEY)})")
+
+    # 2. 요청 데이터 확인
+    url = "https://dapi.kakao.com/v2/local/search/keyword.json"
+    headers = {"Authorization": f"KakaoAK {KAKAO_API_KEY}"}
+    
+    # 카카오 좌표계 확인 (x: 경도, y: 위도)
+    params = {
+        "query": query, 
+        "y": latitude, 
+        "x": longitude, 
+        "radius": radius, 
+        "sort": "distance"
+    }
+    
+    print(f"📍 [DEBUG] 요청 파라미터: {params}")
+
+    try:
+        # 3. 실제 요청 보내기
+        response = requests.get(url, headers=headers, params=params)
+        
+        print(f"📡 [DEBUG] 응답 상태 코드: {response.status_code}")
+        
+        # 4. 결과 분석
+        if response.status_code == 200:
+            data = response.json()
+            documents = data.get("documents", [])
+            print(f"📦 [DEBUG] 검색된 병원 수: {len(documents)}개")
+            
+            if len(documents) == 0:
+                print("⚠️ [DEBUG] 검색 결과가 0개입니다. (좌표나 반경을 확인하세요)")
+
+            hospitals = []
+            for doc in documents[:5]:
+                hospitals.append({
+                    "name": doc["place_name"],
+                    "department": query,
+                    "distance": f"{doc['distance']}m",
+                    "address": doc["road_address_name"] or doc["address_name"],
+                    "phone": doc["phone"],
+                    "url": doc["place_url"],
+                    "x": float(doc["x"]), 
+                    "y": float(doc["y"])
+                })
+            print("="*50 + "\n")
+            return hospitals
+            
+        else:
+            # 에러 발생 시 카카오가 보낸 메시지 출력
+            print(f"❌ [DEBUG] API 호출 실패 원인: {response.text}")
+            print("="*50 + "\n")
+            return []
+            
+    except Exception as e:
+        print(f"🔥 [DEBUG] 치명적 오류 발생: {str(e)}")
+        print("="*50 + "\n")
+        return []
 
 def search_medicine_info(user_data, keyword):
     allergies = user_data.get('allergies', 'None')
