@@ -46,3 +46,7 @@ class RecommendationResponse(BaseModel):
     urgency_level: str            # 응급도 (상/중/하)
     reason: str                   # 추천 이유
     hospitals: List[HospitalInfo] # 추천 병원 목록
+
+class MedicineSearchRequest(BaseModel):
+    user_id: str
+    keyword: str

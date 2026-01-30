@@ -1,8 +1,9 @@
-# logic.py
 import os
+from dotenv import load_dotenv
 from openai import OpenAI
 
-# [중요] 여기에 API 키를 넣으세요
+load_dotenv()  # 이 줄이 핵심
+
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
@@ -152,3 +153,53 @@ def recommend_department_ai(symptom_text):
 
     except Exception as e:
         return "내과", "Low", f"AI 분석 실패: {str(e)}"
+    
+
+def search_medicine_info(user_data, keyword):
+    allergies = user_data.get('allergies', 'None')
+    
+    prompt = f"""
+    You are a helpful 'Korean Pharmacist AI' assisting a foreigner.
+    The user is searching for: "{keyword}".
+
+    [User Profile] Allergies: {allergies}
+
+    [Logic Guidelines for Demo]
+    1. **Smart Search**: 
+       - If input is a Drug Name (e.g., Tylenol), explain that drug.
+       - If input is a Symptom (e.g., Headache), recommend the **most popular Korean OTC drug** (e.g., Geworin, EVE).
+    2. **Classification**: Clearly state if it is **OTC** (Pharmacy) or **RX** (Doctor).
+    3. **Safety**: Check against user's allergies ({allergies}). If risky, output "WARNING".
+
+    [Output Format]
+    === 💊 Medicine Information ===
+    1. Name (KR/EN): 
+       - (Korean Name) / (English Name)
+       
+    2. Classification: (OTC or RX)
+       - (e.g., "Available at Pharmacy" or "Need Prescription")
+       
+    3. Primary Use:
+       - (Simple explanation: e.g., "Pain reliever", "Cold medicine")
+
+    4. Safety Check (Allergy: {allergies}): (SAFE / WARNING)
+       - (If WARNING, explain why briefly)
+
+    5. Est. Price (Korea):
+       - (Approx. range, e.g., 3,000 ~ 5,000 KRW)
+       
+    6. Usage Tip:
+       - (Simple tip: e.g., "Take 2 pills after meal", "May cause drowsiness")
+
+    * Disclaimer: AI estimate. Consult a pharmacist.
+    ================================
+    """
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"Error: {str(e)}"

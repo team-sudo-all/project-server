@@ -6,10 +6,10 @@ from datetime import datetime
 
 # models와 logic에서 필요한 것들 가져오기
 from models import (
-    UserSignupRequest, UserLoginRequest, SymptomRequest,
+    UserSignupRequest, UserLoginRequest, SymptomRequest, MedicineSearchRequest,
     HospitalRecommendationRequest, HospitalInfo, RecommendationResponse
 )
-from logic import generate_medical_chart, generate_cost_guide, recommend_department_ai
+from logic import generate_medical_chart, generate_cost_guide, recommend_department_ai, search_medicine_info
 
 app = FastAPI()
 
@@ -128,6 +128,18 @@ def recommend_hospitals(req: HospitalRecommendationRequest):
         hospitals=fake_hospitals
     )
 
+@app.post("/api/search-medicine")
+def search_medicine(request: MedicineSearchRequest):
+    if request.user_id not in fake_users_db:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # logic.py 호출
+    result = search_medicine_info(fake_users_db[request.user_id], request.keyword)
+    return {"medicine_info": result}
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+
 # 6. [NEW] 히스토리 조회 (마이페이지용)
 @app.get("/api/history/{user_id}")
 def get_history(user_id: str):
@@ -135,6 +147,8 @@ def get_history(user_id: str):
         raise HTTPException(status_code=404, detail="유저 없음")
         
     return {"history": fake_users_db[user_id].get("chart_history", [])}
+
+
 
 # 데이터 확인용 (디버깅)
 @app.get("/api/users")
