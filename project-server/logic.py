@@ -221,6 +221,23 @@ def search_hospitals_real(latitude, longitude, query, radius=2000):
         print(f"🔥 [DEBUG] 치명적 오류 발생: {str(e)}")
         print("="*50 + "\n")
         return []
+    
+def get_image(keyword):
+
+    params = {
+        "q": keyword + " medicine package",
+        "engine": "google_images",
+        "api_key": os.getenv("SERPAPI_KEY")
+    }
+
+    r = requests.get("https://serpapi.com/search", params=params, timeout=10)
+
+    data = r.json()
+
+    if "images_results" in data and len(data["images_results"]) > 0:
+        return data["images_results"][0]["original"]
+
+    return None
 
 def search_medicine_info(user_data, keyword):
     allergies = user_data.get('allergies', 'None')
@@ -269,13 +286,18 @@ def search_medicine_info(user_data, keyword):
             kr_part = text.strip()
             en_part = text.strip()
 
+        image_url = get_image(keyword)
+
+
         return {
             "medicine_info_kr": kr_part,
-            "medicine_info_en": en_part
+            "medicine_info_en": en_part,
+            "image_url": image_url
         }
 
     except Exception as e:
         return {
             "medicine_info_kr": "약 정보 생성 실패",
-            "medicine_info_en": f"Medicine info failed: {str(e)}"
+            "medicine_info_en": f"Medicine info failed: {str(e)}",
+            "image_url": None
         }
