@@ -280,6 +280,11 @@ def search_medicine_info(user_data, keyword):
     6. 복용 팁:
     - 2~3줄
 
+    7. 동일 주성분 약:
+    - 약품명 (제약회사) 형식으로 반드시 작성
+    - 4~5개
+
+
     * 주의: AI 예측입니다. 약사와 상담하세요.
 
     ------------------------
@@ -306,6 +311,11 @@ def search_medicine_info(user_data, keyword):
 
     6. Usage Tip:
     - 2–3 lines
+
+
+    7. Medicines with Same Active Ingredient:
+    - brand (manufacturer) format REQUIRED
+    - 4 ~ 5 items
 
     * Disclaimer: AI estimate. Consult a pharmacist.
     """
