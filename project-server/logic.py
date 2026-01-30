@@ -232,34 +232,21 @@ def search_medicine_info(user_data, keyword):
     [User Profile] Allergies: {allergies}
 
     [Logic Guidelines for Demo]
-    1. **Smart Search**: 
+    1. Smart Search: 
        - If input is a Drug Name (e.g., Tylenol), explain that drug.
-       - If input is a Symptom (e.g., Headache), recommend the **most popular Korean OTC drug** (e.g., Geworin, EVE).
-    2. **Classification**: Clearly state if it is **OTC** (Pharmacy) or **RX** (Doctor).
-    3. **Safety**: Check against user's allergies ({allergies}). If risky, output "WARNING".
+       - If input is a Symptom (e.g., Headache), recommend the most popular Korean OTC drug.
+    2. Classification: Clearly state if it is OTC (Pharmacy) or RX (Doctor).
+    3. Safety: Check against user's allergies ({allergies}). If risky, output WARNING.
 
-    [Output Format]
-    === 💊 Medicine Information ===
-    1. Name (KR/EN): 
-       - (Korean Name) / (English Name)
-       
-    2. Classification: (OTC or RX)
-       - (e.g., "Available at Pharmacy" or "Need Prescription")
-       
-    3. Primary Use:
-       - (Simple explanation: e.g., "Pain reliever", "Cold medicine")
+    Produce TWO sections exactly:
 
-    4. Safety Check (Allergy: {allergies}): (SAFE / WARNING)
-       - (If WARNING, explain why briefly)
+    === MEDICINE INFO KR ===
+    (full Korean version)
 
-    5. Est. Price (Korea):
-       - (Approx. range, e.g., 3,000 ~ 5,000 KRW)
-       
-    6. Usage Tip:
-       - (Simple tip: e.g., "Take 2 pills after meal", "May cause drowsiness")
+    === MEDICINE INFO EN ===
+    (full English version)
 
-    * Disclaimer: AI estimate. Consult a pharmacist.
-    ================================
+    Follow the same medicine info format in both.
     """
 
     try:
@@ -267,6 +254,28 @@ def search_medicine_info(user_data, keyword):
             model="gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}]
         )
-        return response.choices[0].message.content
+
+        text = response.choices[0].message.content
+
+        # ✅ 파싱
+        kr_part = ""
+        en_part = ""
+
+        if "=== MEDICINE INFO EN ===" in text:
+            kr_part, en_part = text.split("=== MEDICINE INFO EN ===", 1)
+            kr_part = kr_part.replace("=== MEDICINE INFO KR ===", "").strip()
+            en_part = en_part.strip()
+        else:
+            kr_part = text.strip()
+            en_part = text.strip()
+
+        return {
+            "medicine_info_kr": kr_part,
+            "medicine_info_en": en_part
+        }
+
     except Exception as e:
-        return f"Error: {str(e)}"
+        return {
+            "medicine_info_kr": "약 정보 생성 실패",
+            "medicine_info_en": f"Medicine info failed: {str(e)}"
+        }

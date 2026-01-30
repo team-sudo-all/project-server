@@ -160,12 +160,16 @@ def update_user(req: UserUpdateRequest):
 
 @app.post("/api/search-medicine")
 def search_medicine(request: MedicineSearchRequest):
+
     if request.user_id not in fake_users_db:
         raise HTTPException(status_code=404, detail="User not found")
     
-    # logic.py 호출
-    result = search_medicine_info(fake_users_db[request.user_id], request.keyword)
-    return {"medicine_info": result}
+    return search_medicine_info(
+        fake_users_db[request.user_id],
+        request.keyword
+    )
+
+
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
