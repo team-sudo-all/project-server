@@ -114,7 +114,7 @@ def recommend_hospitals(req: HospitalRecommendationRequest):
     print(f"🏥 위치({req.latitude}, {req.longitude}) 기반 병원 검색")
     
     # 6-1. AI 진료과 추천 (logic.py)
-    dept, urgency, reason = recommend_department_ai(req.symptoms)
+    dept, urgency, reason_kr, reason_en = recommend_department_ai(req.symptoms)
     
     # 6-2. 카카오 API로 실제 병원 검색 (logic.py)
     real_hospitals = search_hospitals_real(req.latitude, req.longitude, dept, req.radius)
@@ -136,7 +136,8 @@ def recommend_hospitals(req: HospitalRecommendationRequest):
     return RecommendationResponse(
         recommended_department=dept, 
         urgency_level=urgency, 
-        reason=reason, 
+        reason_kr=reason_kr,
+        reason_en=reason_en, 
         hospitals=final_list
     )
 

@@ -65,7 +65,8 @@ class HospitalInfo(BaseModel):
 class RecommendationResponse(BaseModel):
     recommended_department: str
     urgency_level: str
-    reason: str
+    reason_kr: str
+    reason_en: str
     hospitals: List[HospitalInfo]
 
 class MedicineSearchRequest(BaseModel):

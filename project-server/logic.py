@@ -125,7 +125,8 @@ def recommend_department_ai(symptom_text):
     [Output Format]
     Department: [Korean Name]
     Urgency: [Level]
-    Reason: [Short explanation in Korean]
+    Reason_kr: [Short explanation in Korean]
+    Reason_en: [Short explanation in English]
     """
 
     try:
@@ -136,17 +137,19 @@ def recommend_department_ai(symptom_text):
         
         dept = "내과"
         urgency = "Low"
-        reason = "일반 진료"
+        reason_kr = "일반 진료"
+        reason_en = "normal visit"
         
         lines = content.strip().split('\n')
         for line in lines:
             if "Department:" in line: dept = line.split(":", 1)[1].strip()
             elif "Urgency:" in line: urgency = line.split(":", 1)[1].strip()
-            elif "Reason:" in line: reason = line.split(":", 1)[1].strip()
+            elif "Reason_kr:" in line: reason_kr = line.split(":", 1)[1].strip()
+            elif "Reason_en:" in line: reason_en = line.split(":", 1)[1].strip()
             
-        return dept, urgency, reason
+        return dept, urgency, reason_kr, reason_en
     except:
-        return "내과", "Low", "AI 분석 실패"
+        return "내과", "Low", "AI 분석 실패", "AI Analysis Fail"
 
 def search_hospitals_real(latitude, longitude, query, radius=2000):
     print("\n" + "="*50)
