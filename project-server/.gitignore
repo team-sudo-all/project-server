@@ -1,0 +1,25 @@
+# 🔐 secrets
+.env
+.env.*
+*.env
+
+# 🧠 python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 🗃️ compiled
+*.so
+
+# 🧪 pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 🧾 logs
+*.log
+
+# 🖥️ OS
+.DS_Store
+Thumbs.db

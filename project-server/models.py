@@ -1,6 +1,7 @@
 # models.py
 from pydantic import BaseModel
 from typing import Optional
+from typing import List
 
 class UserSignupRequest(BaseModel):
     name: str                   # 이름(풀네임)
@@ -24,3 +25,8 @@ class UserSignupRequest(BaseModel):
 class UserLoginRequest(BaseModel):
     user_id: str
     password: str
+
+class SymptomRequest(BaseModel):
+    user_id: str
+    selected_symptoms: List[str]
+    detail_description: str

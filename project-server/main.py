@@ -2,7 +2,9 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from models import UserSignupRequest, UserLoginRequest
-import uvicorn  # <--- [중요] 이거 꼭 있어야 합니다!
+import uvicorn
+from models import SymptomRequest
+from logic import generate_medical_chart, generate_cost_guide
 
 app = FastAPI()
 
@@ -45,6 +47,38 @@ def login(user: UserLoginRequest):
         "user_id": user.user_id,
         "user_name": stored_user['name']
     }
+
+@app.post("/api/create-chart")
+def create_chart(request: SymptomRequest):
+    # 1. 사용자 정보 찾기 (DB인 fake_users_db에서)
+    if request.user_id not in fake_users_db:
+        raise HTTPException(status_code=404, detail="로그인 정보가 없습니다.")
+    
+    user_info = fake_users_db[request.user_id]
+    
+    # 2. 로직(AI) 실행
+    print(f"🤖 {user_info['name']}님의 차트를 생성 중입니다...")
+    chart_result = generate_medical_chart(user_info, request)
+    
+    # 3. 결과 반환
+    print("✅ 차트 생성 완료!")
+    return {"chart": chart_result}
+
+# [기능 2] 환자용 영어 진료비/절차 안내 (새로 추가됨!)
+@app.post("/api/estimate-cost")
+def estimate_cost(user_id: str):
+    # 사용자 정보 조회
+    if user_id not in fake_users_db:
+        raise HTTPException(status_code=404, detail="사용자 정보를 찾을 수 없습니다.")
+    
+    user_info = fake_users_db[user_id]
+    
+    print(f"💰 진료비 안내 요청: {user_info['name']} (보험: {user_info.get('insurance_info')})")
+    
+    # logic.py의 진료비 안내 함수 호출
+    cost_result = generate_cost_guide(user_info)
+    
+    return {"cost_guide": cost_result}
 
 # 데이터 확인용
 @app.get("/api/users")
