@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: medical-service-api
+    env: python
+    region: singapore
+    plan: free
+    buildCommand: cd project-server && pip install -r ../requirements.txt
+    startCommand: cd project-server && uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: KAKAO_API_KEY
+        sync: false
+      - key: SERPAPI_KEY
+        sync: false
